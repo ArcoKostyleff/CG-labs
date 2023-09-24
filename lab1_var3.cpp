@@ -1,3 +1,4 @@
+
 // Computer Graphics Lab 1
 // Crew: Kostylev Maleev Zverev
 // var 3
@@ -38,9 +39,33 @@ class resumeButton : public button {
     void clicked() override { gamePause = false; }
 };
 
+template <typename Shape>
+void deleteTransparentTraces(std::deque<Shape> &shapes) {
+    while (shapes.size() &&
+           (shapes[0].getFillColor().toInteger() & 0xFF) == 0) {
+        shapes.erase(shapes.begin());
+    }
+}
+
+template <typename Shape>
+void decreaseOpacity(std::deque<Shape> &shapes, int reduceBy) {
+    for (int i = 0; i < shapes.size(); i++) {
+        int opacity = shapes[i].getFillColor().toInteger() & 0xFF;
+        opacity -= reduceBy;
+        opacity = std::max(opacity, 0);
+
+        shapes[i].setFillColor(sf::Color(
+            shapes[i].getFillColor().toInteger() & 0xFFFFFF00 | opacity));
+        shapes[i].setOutlineColor(sf::Color(
+            shapes[i].getOutlineColor().toInteger() & 0xFFFFFF00 | opacity));
+    }
+}
+
 int main() {
     constexpr int WINDOW_WIDTH = 800;
     constexpr int WINDOW_HEIGHT = 600;
+    constexpr int TRACES_SPAWN_RATE = 10;
+    constexpr float TRACES_OPACITY_LOSE_FACTOR = 0.0001;
     sf::RenderWindow window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
                             "lab1");
 
@@ -51,6 +76,8 @@ int main() {
     cr1.setOutlineColor(sf::Color::Yellow);
     cr1.setPosition({0, 0});
     cr1.setFillColor(sf::Color(0xFF, 0, 0));
+
+    std::deque<sf::CircleShape> traces;
 
     sf::Vector2f circlePos{};
 
@@ -63,6 +90,8 @@ int main() {
     int x_dir = 1;
     int y_dir = 1;
     float radIncr = 1;
+    int bufferFramesToSkip = TRACES_SPAWN_RATE;
+    float framesToSkipToReduceOpacity = TRACES_OPACITY_LOSE_FACTOR;
     while (window.isOpen()) {
 
         sf::Event ev;
@@ -101,7 +130,28 @@ int main() {
             else if (circlePos.y <= 0) // отскоки
                 y_dir = 1;
 
+            circlePos.y = sin(circlePos.x / WINDOW_WIDTH * 20) * 200 + 250;
+
             cr1.setPosition(circlePos);
+        }
+
+        // Угасающие следы фигуры
+        if (bufferFramesToSkip == 1) {
+            traces.push_back(cr1);
+        }
+        framesToSkipToReduceOpacity =
+            std::max(0.f, framesToSkipToReduceOpacity - deltaTime);
+        decreaseOpacity(traces, framesToSkipToReduceOpacity == 0);
+        deleteTransparentTraces(traces);
+        for (int i = 0; i < traces.size(); i++) {
+            window.draw(traces[i]);
+        }
+        // Сбрасываем счетчики, если нужно
+        if (framesToSkipToReduceOpacity == 0.f) {
+            framesToSkipToReduceOpacity = TRACES_OPACITY_LOSE_FACTOR;
+        }
+        if (--bufferFramesToSkip == 0) {
+            bufferFramesToSkip = TRACES_SPAWN_RATE;
         }
 
         window.draw(cr1);
@@ -109,3 +159,5 @@ int main() {
         window.display();
     }
 }
+
+
