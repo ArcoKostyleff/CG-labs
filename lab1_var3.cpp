@@ -41,8 +41,6 @@ class resumeButton : public button {
 int main() {
     constexpr int WINDOW_WIDTH = 800;
     constexpr int WINDOW_HEIGHT = 600;
-    constexpr int TRACES_SPAWN_RATE = 10;
-    constexpr float TRACES_OPACITY_LOSE_FACTOR = 0.0001;
     sf::RenderWindow window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
                             "lab1");
 
@@ -65,8 +63,6 @@ int main() {
     int x_dir = 1;
     int y_dir = 1;
     float radIncr = 1;
-    int bufferFramesToSkip = TRACES_SPAWN_RATE;
-    float framesToSkipToReduceOpacity = TRACES_OPACITY_LOSE_FACTOR;
     while (window.isOpen()) {
 
         sf::Event ev;
