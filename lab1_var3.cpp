@@ -8,36 +8,10 @@
 #include "SFML/System.hpp"
 #include "SFML/Window.hpp"
 #include <deque>
+#include <iostream>
 #include <math.h>
 
 static bool gamePause = false;
-
-class button {
-  public:
-    // button(int x, int y, int w, int h) : pos_x(x), pos_y(y), size_x(w),
-    // size_y(h) {};
-    virtual void clicked() = 0;
-    sf::Shape *shape_ptr;
-    int pos_x{};
-    int pos_y{};
-    int size_x{};
-    int size_y{};
-
-  private:
-};
-
-class resumeButton : public button {
-  public:
-    resumeButton(int x, int y, int w,
-                 int h) /* : pos_x(x), pos_y(y), size_x(w), size_y(h)*/ {
-        pos_x = x;
-        pos_y = (y);
-        size_x = (w);
-        size_y = (h);
-        shape_ptr = new sf::RectangleShape(sf::Vector2f(w, h));
-    }
-    void clicked() override { gamePause = false; }
-};
 
 template <typename Shape>
 void deleteTransparentTraces(std::deque<Shape> &shapes) {
@@ -47,8 +21,10 @@ void deleteTransparentTraces(std::deque<Shape> &shapes) {
     }
 }
 
+double opacityDecreased = 0;
 template <typename Shape>
 void decreaseOpacity(std::deque<Shape> &shapes, int reduceBy) {
+    opacityDecreased += reduceBy;
     for (int i = 0; i < shapes.size(); i++) {
         int opacity = shapes[i].getFillColor().toInteger() & 0xFF;
         opacity -= reduceBy;
@@ -64,8 +40,9 @@ void decreaseOpacity(std::deque<Shape> &shapes, int reduceBy) {
 int main() {
     constexpr int WINDOW_WIDTH = 800;
     constexpr int WINDOW_HEIGHT = 600;
-    constexpr int TRACES_SPAWN_RATE = 10;
-    constexpr float TRACES_OPACITY_LOSE_FACTOR = 0.0001;
+    constexpr int TRACES_SPAWN_RATE =
+        30; // чем больше, тем реже появляются следы
+    constexpr float TRACE_LIFETIME_SECONDS = 0.25f;
     sf::RenderWindow window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
                             "lab1");
 
@@ -88,10 +65,9 @@ int main() {
     float deltaTime{};
 
     int x_dir = 1;
-    int y_dir = 1;
     float radIncr = 1;
     int bufferFramesToSkip = TRACES_SPAWN_RATE;
-    float framesToSkipToReduceOpacity = TRACES_OPACITY_LOSE_FACTOR;
+    float timeBeforeReducingOpacity = 0;
     while (window.isOpen()) {
 
         sf::Event ev;
@@ -112,9 +88,7 @@ int main() {
             deltaTime = timer.restart().asSeconds();
             circlePos = cr1.getPosition();
             circlePos.x += x_dir * circleSpeedX * deltaTime; // передвижение
-            circlePos.y += y_dir * circleSpeedY * deltaTime; // передвижение
             circleRadius += 10 * radIncr * deltaTime;
-            circlePos.y -= 10 * radIncr * deltaTime;
 
             if (circleRadius >= 100 || circleRadius <= 10)
                 radIncr *= -1;
@@ -125,12 +99,8 @@ int main() {
             else if (circlePos.x <= 0) // отскоки
                 x_dir = 1;
 
-            if (circlePos.y + 2 * circleRadius >= WINDOW_HEIGHT)
-                y_dir = -1;
-            else if (circlePos.y <= 0) // отскоки
-                y_dir = 1;
-
-            circlePos.y = sin(circlePos.x / WINDOW_WIDTH * 20) * 200 + 250;
+            circlePos.y = sin(circlePos.x / WINDOW_WIDTH * 20) * 200 +
+                          WINDOW_HEIGHT / 2 - circleRadius;
 
             cr1.setPosition(circlePos);
         }
@@ -139,17 +109,15 @@ int main() {
         if (bufferFramesToSkip == 1) {
             traces.push_back(cr1);
         }
-        framesToSkipToReduceOpacity =
-            std::max(0.f, framesToSkipToReduceOpacity - deltaTime);
-        decreaseOpacity(traces, framesToSkipToReduceOpacity == 0);
+        timeBeforeReducingOpacity +=
+            deltaTime * (1 / TRACE_LIFETIME_SECONDS) * 255;
+        decreaseOpacity(traces, timeBeforeReducingOpacity);
+        timeBeforeReducingOpacity -= (int)timeBeforeReducingOpacity;
         deleteTransparentTraces(traces);
         for (int i = 0; i < traces.size(); i++) {
             window.draw(traces[i]);
         }
-        // Сбрасываем счетчики, если нужно
-        if (framesToSkipToReduceOpacity == 0.f) {
-            framesToSkipToReduceOpacity = TRACES_OPACITY_LOSE_FACTOR;
-        }
+        // Сбрасываем счетчик, если нужно
         if (--bufferFramesToSkip == 0) {
             bufferFramesToSkip = TRACES_SPAWN_RATE;
         }
@@ -159,5 +127,3 @@ int main() {
         window.display();
     }
 }
-
-
