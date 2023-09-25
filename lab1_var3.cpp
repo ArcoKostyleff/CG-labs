@@ -11,6 +11,8 @@
 #include <iostream>
 #include <math.h>
 
+#define DECREASE_OPACITY_BY_DISTANCE
+
 static bool gamePause = false;
 
 template <typename Shape>
@@ -21,10 +23,8 @@ void deleteTransparentTraces(std::deque<Shape> &shapes) {
     }
 }
 
-double opacityDecreased = 0;
 template <typename Shape>
 void decreaseOpacity(std::deque<Shape> &shapes, int reduceBy) {
-    opacityDecreased += reduceBy;
     for (int i = 0; i < shapes.size(); i++) {
         int opacity = shapes[i].getFillColor().toInteger() & 0xFF;
         opacity -= reduceBy;
@@ -34,6 +34,25 @@ void decreaseOpacity(std::deque<Shape> &shapes, int reduceBy) {
             shapes[i].getFillColor().toInteger() & 0xFFFFFF00 | opacity));
         shapes[i].setOutlineColor(sf::Color(
             shapes[i].getOutlineColor().toInteger() & 0xFFFFFF00 | opacity));
+    }
+}
+
+int getDistance(const sf::CircleShape &s1, const sf::CircleShape &s2) {
+    auto dx = s1.getPosition().x - s2.getPosition().x;
+    auto dy = s1.getPosition().y - s2.getPosition().y;
+
+    return sqrt(dx * dx + dy * dy);
+}
+
+template <typename Shape>
+void recalculateOpacity(std::deque<Shape> &shapes, const Shape &cr1) {
+    for (auto &shape : shapes) {
+        int opacity = 255 - std::min(getDistance(shape, cr1) * 4, 255);
+        // std::cout << opacity << "\n";
+        shape.setFillColor(
+            sf::Color(shape.getFillColor().toInteger() & 0xFFFFFF00 | opacity));
+        shape.setOutlineColor(sf::Color(
+            shape.getOutlineColor().toInteger() & 0xFFFFFF00 | opacity));
     }
 }
 
@@ -111,7 +130,11 @@ int main() {
         }
         timeBeforeReducingOpacity +=
             deltaTime * (1 / TRACE_LIFETIME_SECONDS) * 255;
+#ifdef DECREASE_OPACITY_BY_DISTANCE
+        recalculateOpacity(traces, cr1);
+#else
         decreaseOpacity(traces, timeBeforeReducingOpacity);
+#endif
         timeBeforeReducingOpacity -= (int)timeBeforeReducingOpacity;
         deleteTransparentTraces(traces);
         for (int i = 0; i < traces.size(); i++) {
