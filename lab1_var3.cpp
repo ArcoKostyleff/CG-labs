@@ -11,7 +11,7 @@
 #include <iostream>
 #include <math.h>
 
-#define DECREASE_OPACITY_BY_DISTANCE
+// #define DECREASE_OPACITY_BY_DISTANCE
 
 static bool gamePause = false;
 
@@ -75,13 +75,13 @@ int main() {
 
     std::deque<sf::CircleShape> traces;
 
-    sf::Vector2f circlePos{};
+    sf::Vector2f circlePos;
 
     sf::Clock timer;
 
-    constexpr float circleSpeedX{100.f};
-    constexpr float circleSpeedY{50.f};
-    float deltaTime{};
+    constexpr float circleSpeedX = 100.f;
+    constexpr float circleSpeedY = 50.f;
+    float deltaTime;
 
     int x_dir = 1;
     float radIncr = 1;
@@ -92,37 +92,25 @@ int main() {
         sf::Event ev;
         window.clear(sf::Color::Blue);
         window.draw(cr1);
-        while (window.pollEvent(ev)) {
-            if (ev.type == sf::Event::Closed)
-                window.close();
-            if (ev.type == sf::Event::KeyReleased) {
-                if (ev.key.code == sf::Keyboard::Escape) {
-                    gamePause = !gamePause;
-                }
-            }
-        }
-        if (gamePause) {
-            timer.restart();
-        } else {
-            deltaTime = timer.restart().asSeconds();
-            circlePos = cr1.getPosition();
-            circlePos.x += x_dir * circleSpeedX * deltaTime; // передвижение
-            circleRadius += 10 * radIncr * deltaTime;
 
-            if (circleRadius >= 100 || circleRadius <= 10)
-                radIncr *= -1;
-            cr1.setRadius(circleRadius);
+        deltaTime = timer.restart().asSeconds();
+        circlePos = cr1.getPosition();
+        circlePos.x += x_dir * circleSpeedX * deltaTime; // передвижение
+        circleRadius += 10 * radIncr * deltaTime;
 
-            if (circlePos.x + 2 * circleRadius >= WINDOW_WIDTH)
-                x_dir = -1;
-            else if (circlePos.x <= 0) // отскоки
-                x_dir = 1;
+        if (circleRadius >= 100 || circleRadius <= 10)
+            radIncr *= -1;
+        cr1.setRadius(circleRadius);
 
-            circlePos.y = sin(circlePos.x / WINDOW_WIDTH * 20) * 200 +
-                          WINDOW_HEIGHT / 2 - circleRadius;
+        if (circlePos.x + 2 * circleRadius >= WINDOW_WIDTH)
+            x_dir = -1;
+        else if (circlePos.x <= 0) // отскоки
+            x_dir = 1;
 
-            cr1.setPosition(circlePos);
-        }
+        circlePos.y = sin(circlePos.x / WINDOW_WIDTH * 20) * 200 +
+                      WINDOW_HEIGHT / 2 - circleRadius;
+
+        cr1.setPosition(circlePos);
 
         // Угасающие следы фигуры
         if (bufferFramesToSkip == 1) {
