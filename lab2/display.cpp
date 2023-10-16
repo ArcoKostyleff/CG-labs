@@ -6,9 +6,8 @@
 
 #include "io.h"
 #include "structs.h"
-#include "upscale.h"
 
-constexpr int virtualPixelSize = 1;
+constexpr int virtualPixelSize = 30;
 
 void displayImage(const Image &image) {
     sf::RenderWindow window(
@@ -79,13 +78,6 @@ void createImage() {
 int main() {
 
     // createImage();
-
-    std::cout << "Upscale? (y/n) ";
-    char upscaleResp;
-    std::cin >> upscaleResp;
-    if (upscaleResp == 'y') {
-        upscaleWithPrompt();
-    }
 
     std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
     std::cout << "Enter image path to view... ";

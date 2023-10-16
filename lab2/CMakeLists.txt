@@ -37,7 +37,7 @@ endif()
 find_package(SFML 2.5 COMPONENTS system window graphics audio REQUIRED)
 
 # Compile executable
-add_executable(lab2 display.cpp io.h structs.h upscale.h)
+add_executable(lab2 display.cpp io.h structs.h)
 
 # Set include directory search paths
 target_include_directories(lab2
