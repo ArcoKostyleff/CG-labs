@@ -14,19 +14,11 @@ Image upscale(const Image &image, uint16_t upscaleX, uint16_t upscaleY) {
         std::vector<Pixel>(image.header.width * image.header.height * upscaleX *
                            upscaleY)};
 
-    for (int y = 0; y < image.header.height; y++) {
-        for (int x = 0; x < image.header.width; x++) {
-            Pixel currentPixel = image.pixels[y * image.header.width + x];
-            for (int y_fill = 0; y_fill < upscaleY; y_fill++) {
-
-                for (int x_fill = 0; x_fill < upscaleX; x_fill++) {
-                    scaledImage.pixels[(y * upscaleY + y_fill) *
-                                           scaledImage.header.width * 1 +
-                                       (x * upscaleX + x_fill)] = currentPixel;
-                }
-            }
-        }
-    }
+    for (int y = 0; y < scaledImage.header.height; y++)
+        for (int x = 0; x < scaledImage.header.width; x++)
+            scaledImage.pixels[y * scaledImage.header.width + x] =
+                image
+                    .pixels[(y / upscaleY * image.header.width) + x / upscaleX];
 
     return scaledImage;
 }
