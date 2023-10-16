@@ -45,8 +45,11 @@ void upscaleWithPrompt() {
               << image.header.height << std::endl;
 
     uint16_t upscaleX, upscaleY;
-    std::cout << "Enter upscale x and y factors: ";
+    do {
+    std::cout << "Enter upscale x and y factors. Interval [0; 300]... ";
     std::cin >> upscaleX >> upscaleY;
+    } while(upscaleX > 300 || upscaleY > 300);
+    
 
     std::cout << "Enter output path... ";
     std::string outputPath;

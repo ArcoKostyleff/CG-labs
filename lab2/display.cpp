@@ -4,6 +4,7 @@
 #include <future>
 #include <vector>
 
+#include "color_replace.h"
 #include "io.h"
 #include "structs.h"
 #include "upscale.h"
@@ -76,16 +77,30 @@ void createImage() {
     writeImage(outputFile, img);
 }
 
-int main() {
-
-    // createImage();
-
+void upscale() {
     std::cout << "Upscale? (y/n) ";
     char upscaleResp;
     std::cin >> upscaleResp;
     if (upscaleResp == 'y') {
         upscaleWithPrompt();
     }
+}
+
+void replaceColor() {
+    std::cout << "Replace Color? (y/n) ";
+    char upscaleResp;
+    std::cin >> upscaleResp;
+    if (upscaleResp == 'y') {
+        replaceColorWithPrompt();
+    }
+}
+
+int main() {
+
+    upscale();
+    replaceColor();
+
+    // createImage();
 
     std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
     std::cout << "Enter image path to view... ";
