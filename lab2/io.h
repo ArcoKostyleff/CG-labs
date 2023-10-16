@@ -9,19 +9,20 @@
 #include "structs.h"
 
 // Функция для чтения заголовка из файла
-FileHeader readHeader(std::ifstream &file) {
+FileHeader _readHeader(std::ifstream &file) {
     FileHeader header;
     file.read(reinterpret_cast<char *>(&header), sizeof(header));
     return header;
 }
 
 // Функция для записи заголовка в файл
-void writeHeader(std::ofstream &file, const FileHeader &header) {
+void _writeHeader(std::ofstream &file, const FileHeader &header) {
     file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 }
 
 // Функция для чтения палитры из файла
-std::vector<Color> readPalette(std::ifstream &file, uint16_t paletteSize = 16) {
+std::vector<Color> _readPalette(std::ifstream &file,
+                                uint16_t paletteSize = 16) {
     std::vector<Color> palette(paletteSize);
     for (int i = 0; i < paletteSize; ++i) {
         Color color;
@@ -32,15 +33,15 @@ std::vector<Color> readPalette(std::ifstream &file, uint16_t paletteSize = 16) {
 }
 
 // Функция для записи палитры в файл
-void writePalette(std::ofstream &file, const std::vector<Color> &palette) {
+void _writePalette(std::ofstream &file, const std::vector<Color> &palette) {
     for (const Color &color : palette) {
         file.write(reinterpret_cast<const char *>(&color), sizeof(Color));
     }
 }
 
 // Функция для чтения пикселей изображения
-std::vector<Pixel> readPixels(std::ifstream &file, uint16_t width,
-                              uint16_t height) {
+std::vector<Pixel> _readPixels(std::ifstream &file, uint16_t width,
+                               uint16_t height) {
     std::vector<Pixel> pixels(width * height);
     for (int i = 0; i < pixels.size(); i += 2) {
         uint8_t twoPixels;
@@ -48,11 +49,16 @@ std::vector<Pixel> readPixels(std::ifstream &file, uint16_t width,
         pixels[i] = twoPixels >> 4;
         pixels[i + 1] = twoPixels & 0x0F;
     }
+    if (pixels.size() % 2 != 0) {
+        uint8_t onePixel;
+        file.read(reinterpret_cast<char *>(&onePixel), sizeof(onePixel));
+        pixels[pixels.size() - 1] = onePixel;
+    }
     return pixels;
 }
 
 // Функция для записи пикселей в файл
-void writePixels(std::ofstream &file, const std::vector<Pixel> &pixels) {
+void _writePixels(std::ofstream &file, const std::vector<Pixel> &pixels) {
 
     for (int i = 0; i < pixels.size() - 1; i += 2) {
         uint8_t twoPixels = (pixels[i] << 4) | pixels[i + 1];
@@ -66,13 +72,15 @@ void writePixels(std::ofstream &file, const std::vector<Pixel> &pixels) {
 }
 
 Image readImage(std::ifstream &file) {
-    FileHeader header = readHeader(file);
-    return {header, readPixels(file, header.width, header.height)};
+    FileHeader header = _readHeader(file);
+    return {header, _readPalette(file),
+            _readPixels(file, header.width, header.height)};
 }
 
 void writeImage(std::ofstream &file, const Image &image) {
-    writeHeader(file, image.header);
-    writePixels(file, image.pixels);
+    _writeHeader(file, image.header);
+    _writePalette(file, image.palette);
+    _writePixels(file, image.pixels);
 }
 
 // int main() {
@@ -84,7 +92,7 @@ void writeImage(std::ofstream &file, const Image &image) {
 //         return 1;
 //     }
 
-//     std::vector<Color> palette = readPalette(readPaletteFile);
+//     std::vector<Color> palette = _readPalette(readPaletteFile);
 //     std::cout << "Palette:\n";
 //     for (auto c : palette) {
 //         std::cout << (int)c.alpha << " " << (int)c.red << " " << (int)c.green
@@ -101,13 +109,13 @@ void writeImage(std::ofstream &file, const Image &image) {
 
 //     {
 //         std::ofstream outputFile("image1.bin", std::ios::binary);
-//         writeHeader(outputFile, header);
+//         _writeHeader(outputFile, header);
 
 //         int i = 1;
 //         for (auto &p : pixels) {
 //             p = i++ % 16;
 //         }
-//         writePixels(outputFile, pixels);
+//         _writePixels(outputFile, pixels);
 //     }
 
 //     std::ifstream inputFile("image1.bin", std::ios::binary);

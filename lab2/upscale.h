@@ -1,13 +1,14 @@
 #pragma once
+#include "io.h"
 #include "structs.h"
 #include <iostream>
 
 Image upscale(const Image &image, uint16_t upscaleX, uint16_t upscaleY) {
-    std::cout << "Upscale started\n";
     Image scaledImage{
         FileHeader{static_cast<uint16_t>(image.header.width * upscaleX),
                    static_cast<uint16_t>(image.header.height * upscaleY),
                    image.header.bitsPerPixel, image.header.paletteSize},
+        image.palette,
         std::vector<Pixel>(image.header.width * image.header.height * upscaleX *
                            upscaleY)};
 
@@ -25,6 +26,10 @@ Image upscale(const Image &image, uint16_t upscaleX, uint16_t upscaleY) {
         }
     }
 
-    std::cout << "Upscale finished\n";
     return scaledImage;
+}
+
+void upscale(const Image &image, uint16_t upscaleX, uint16_t upscaleY,
+             std::ofstream &outputFile) {
+    writeImage(outputFile, upscale(image, upscaleX, upscaleY));
 }

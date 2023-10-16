@@ -29,6 +29,7 @@ typedef std::vector<Color> Palette;
 #pragma pack(push, 1)
 struct Image {
     FileHeader header;
+    Palette palette;
     std::vector<Pixel> pixels;
 };
 #pragma pack(pop)
