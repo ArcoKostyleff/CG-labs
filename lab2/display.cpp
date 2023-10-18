@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Color.hpp>
 #include <filesystem>
 #include <fstream>
-#include <future>
 #include <vector>
 
 #include "color_replace.h"
@@ -12,110 +12,101 @@
 constexpr int virtualPixelSize = 1;
 
 void displayImage(const Image &image) {
-    sf::RenderWindow window(
-        sf::VideoMode(image.header.width * virtualPixelSize,
-                      image.header.height * virtualPixelSize),
-        "SFML Image Display");
 
-    // Создаем изображение и устанавливаем его пиксели
-    sf::Image sfmlImage;
-    sfmlImage.create(image.header.width, image.header.height);
+  // Создаем изображение и устанавливаем его пиксели
+  sf::Image sfmlImage;
+  sfmlImage.create(image.header.width, image.header.height);
 
-    std::vector<sf::Color> sfmlColors;
-    for (const Color &color : image.palette) {
-        sfmlColors.emplace_back(color.red, color.green, color.blue,
-                                color.alpha);
+  std::vector<sf::Color> sfmlColors;
+  for (const Color &color : image.palette) {
+    sfmlColors.emplace_back(color.red, color.green, color.blue, color.alpha);
+  }
+
+  replaceColor(sfmlColors);
+
+  for (int y = 0; y < image.header.height; y++) {
+    for (int x = 0; x < image.header.width; x++) {
+      int pixelIndex = y * image.header.width + x;
+      Pixel pixelValue = image.pixels[pixelIndex];
+      sfmlImage.setPixel(x, y, sfmlColors[pixelValue]);
+    }
+  }
+
+  // Создаем текстуру и спрайт
+  sf::Texture texture;
+  texture.loadFromImage(sfmlImage);
+  sf::Sprite sprite(texture);
+
+  // Устанавливаем масштаб спрайта
+  sprite.setScale(static_cast<float>(virtualPixelSize),
+                  static_cast<float>(virtualPixelSize));
+
+  sf::RenderWindow window(sf::VideoMode(image.header.width * virtualPixelSize,
+                                        image.header.height * virtualPixelSize),
+                          "SFML Image Display");
+
+  while (window.isOpen()) {
+    sf::Event event;
+    while (window.pollEvent(event)) {
+      if (event.type == sf::Event::Closed) {
+        window.close();
+      }
     }
 
-    for (int y = 0; y < image.header.height; y++) {
-        for (int x = 0; x < image.header.width; x++) {
-            int pixelIndex = y * image.header.width + x;
-            Pixel pixelValue = image.pixels[pixelIndex];
-            sfmlImage.setPixel(x, y, sfmlColors[pixelValue]);
-        }
-    }
-
-    // Создаем текстуру и спрайт
-    sf::Texture texture;
-    texture.loadFromImage(sfmlImage);
-    sf::Sprite sprite(texture);
-
-    // Устанавливаем масштаб спрайта
-    sprite.setScale(static_cast<float>(virtualPixelSize),
-                    static_cast<float>(virtualPixelSize));
-
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
-        }
-
-        window.clear();
-        window.draw(sprite);
-        window.display();
-    }
+    window.clear();
+    window.draw(sprite);
+    window.display();
+  }
 }
 
 void createImage() {
-    Image img;
-    img.header.bitsPerPixel = 4;
-    img.header.width = 7;
-    img.header.height = 6;
-    img.header.paletteSize = 16;
-    img.pixels = {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-                  0,   0,   0,   0xC, 0xC, 0xC, 0xC, 0xC, 0xC, 0xC, 0xC,
-                  0xC, 0xC, 0xC, 0xC, 0xC, 0xC, 4,   4,   4,   4,   4,
-                  4,   4,   4,   4,   4,   4,   4,   4,   4};
+  Image img;
+  img.header.bitsPerPixel = 4;
+  img.header.width = 7;
+  img.header.height = 6;
+  img.header.paletteSize = 16;
+  img.pixels = {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                0,   0,   0,   0xC, 0xC, 0xC, 0xC, 0xC, 0xC, 0xC, 0xC,
+                0xC, 0xC, 0xC, 0xC, 0xC, 0xC, 4,   4,   4,   4,   4,
+                4,   4,   4,   4,   4,   4,   4,   4,   4};
 
-    std::ifstream paletteFile("../palette2.bin");
+  std::ifstream paletteFile("../palette2.bin");
 
-    img.palette = _readPalette(paletteFile);
+  img.palette = _readPalette(paletteFile);
 
-    std::ofstream outputFile("../flagBig.bin", std::ios::binary);
-    writeImage(outputFile, img);
+  std::ofstream outputFile("../flagBig.bin", std::ios::binary);
+  writeImage(outputFile, img);
 }
 
 void upscale() {
-    std::cout << "Upscale? (y/n) ";
-    char upscaleResp;
-    std::cin >> upscaleResp;
-    if (upscaleResp == 'y') {
-        upscaleWithPrompt();
-    }
-}
-
-void replaceColor() {
-    std::cout << "Replace Color? (y/n) ";
-    char upscaleResp;
-    std::cin >> upscaleResp;
-    if (upscaleResp == 'y') {
-        replaceColorWithPrompt();
-    }
+  std::cout << "Upscale? (y/n) ";
+  char upscaleResp;
+  std::cin >> upscaleResp;
+  if (upscaleResp == 'y') {
+    upscaleWithPrompt();
+  }
 }
 
 int main() {
 
-    upscale();
-    replaceColor();
+  upscale();
 
-    // createImage();
+  // createImage();
 
-    std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
-    std::cout << "Enter image path to view... ";
-    std::string imagePath;
-    std::cin >> imagePath;
+  std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
+  std::cout << "Enter image path to view... ";
+  std::string imagePath;
+  std::cin >> imagePath;
 
-    std::ifstream inputFile(imagePath, std::ios::binary);
-    if (!inputFile.is_open()) {
-        std::cout << "Error opening\n";
-        return 1;
-    }
-    Image image = readImage(inputFile);
-    std::cout << image.header.width << "x" << image.header.height << std::endl;
+  std::ifstream inputFile(imagePath, std::ios::binary);
+  if (!inputFile.is_open()) {
+    std::cout << "Error opening\n";
+    return 1;
+  }
+  Image image = readImage(inputFile);
+  std::cout << image.header.width << "x" << image.header.height << std::endl;
 
-    displayImage(image);
+  displayImage(image);
 
-    return 0;
+  return 0;
 }

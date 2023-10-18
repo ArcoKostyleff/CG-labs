@@ -1,52 +1,40 @@
 #pragma once
-
 #include "io.h"
 #include "structs.h"
+#include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Color.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
 
-Image replaceColor(Image image, Pixel from, Pixel to) {
-    std::replace(image.pixels.begin(), image.pixels.end(), from, to);
-    return image;
-}
+void replaceColor(std::vector<sf::Color> &colors) {
+  std::cout << "Replace Color? (y/n) \n > ";
+  char upscaleResp;
+  std::cin >> upscaleResp;
+  if (upscaleResp != 'y') {
+    return;
+  }
+  std::cout << "Palette ARGB: \n";
+  for (int i = 0; i < colors.size(); i++) {
+    std::cout << i << ". (" << (int)colors[i].a << ", " << (int)colors[i].r
+              << ", " << (int)colors[i].g << ", " << (int)colors[i].b << ")\n";
+  }
 
-void replaceColor(const Image &image, Pixel from, Pixel to,
-                  std::ofstream &outputFile) {
-    writeImage(outputFile, replaceColor(image, from, to));
-}
+  uint32_t index;
+  do {
+    std::cout << "Index of color to replace? \n > ";
+    std::cin >> index;
+  } while (index < 0 || index > colors.size());
 
-void replaceColorWithPrompt() {
-    std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
-    std::cout << "Enter image path to replace color... ";
-    std::string imagePath;
-    std::cin >> imagePath;
+  uint32_t a, r, g, b;
+  do {
+    std::cout << "ARGB componenents separated by space in range [0; 255]\n > ";
+    std::cin >> a >> r >> g >> b;
+  } while (a < 0 || r < 0 || g < 0 || b < 0 || a > 255 || r > 255 || g > 255 ||
+           b > 255);
 
-    std::ifstream inputFile(imagePath, std::ios::binary);
-    if (!inputFile.is_open()) {
-        std::cout << "Error opening\n";
-        return;
-    }
+  sf::Color newColor(r, g, b, a);
+  colors[index] = newColor;
 
-    Image image = readImage(inputFile);
-    std::cout << "Original size: " << image.header.width << "x"
-              << image.header.height << std::endl;
-
-    int from, to;
-    do {
-        std::cout << "Enter replaced and replacer color id... ";
-        std::cin >> from >> to;
-    } while (from > 16 || to > 16);
-
-    std::cout << "Enter output path... ";
-    std::string outputPath;
-    std::cin >> outputPath;
-    std::ofstream outputFile(outputPath, std::ios::binary);
-    if (!outputFile.is_open()) {
-        std::cout << "Error opening\n";
-        return;
-    }
-
-    replaceColor(image, from, to, outputFile);
-    std::cout << "Success!\n";
+  std::cout << "Success!\n";
 }
