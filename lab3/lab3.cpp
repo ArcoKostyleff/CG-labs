@@ -2,9 +2,14 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #include "funcs.h"
+
+const int SCALE = 30;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
 
 struct Polygon {
     sf::Color color;
@@ -45,9 +50,9 @@ std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale
 
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Lab 3 - Variant 1");
+    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab 3 - Variant 1");
     window.clear(sf::Color::Black);
-    auto polygons = readPolygonsFromFile("/home/aptem/repositories/CG-labs/lab2/pollygons.txt", 30, 400, 300);
+    auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
     for (auto& polygon : polygons) {
         std::cout << "Draw pollygon" << std::endl;
@@ -60,10 +65,8 @@ int main() {
         drawPolygon(window, polygon.points, polygon.color);
         auto point = getPointInsidePolygon(polygon.points);
         floodFill(window, point.x, point.y, polygon.color, polygon.color);
-
         window.display();
-
-        sleep(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     // // Отрисовка координатной прямой посередине экрана
