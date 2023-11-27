@@ -1,10 +1,11 @@
 #include <SFML/Graphics.hpp>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 #include <thread>
 
+#include "criterion.hpp"
 #include "funcs.h"
 
 const int SCALE = 30;
@@ -16,7 +17,8 @@ struct Polygon {
     std::vector<sf::Vector2f> points;
 };
 
-std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale = 1, int shiftX = 0, int shiftY = 0) {
+std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale = 1, int shiftX = 0, int shiftY = 0)
+{
     std::ifstream in(filename);
     std::vector<Polygon> polygons;
     if (!in.is_open()) {
@@ -48,11 +50,13 @@ std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale
     return polygons;
 }
 
-
-int main() {
-    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab 3 - Variant 1");
-    window.clear(sf::Color::Black);
-    auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+BENCHMARK(DDA)
+{
+    SETUP_BENCHMARK(
+        sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab 3 - Variant 1");
+        window.clear(sf::Color::Black);
+        window.setVisible(false);
+        auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);)
 
     for (auto& polygon : polygons) {
         std::cout << "Draw pollygon" << std::endl;
@@ -64,10 +68,24 @@ int main() {
 
         drawPolygon(window, polygon.points, polygon.color);
         auto point = getPointInsidePolygon(polygon.points);
-        floodFill(window, point.x, point.y, polygon.color, polygon.color);
-        window.display();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // floodFill(window, point.x, point.y, polygon.color, polygon.color);
+        // window.display();
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
+    TEARDOWN_BENCHMARK(
+
+        window.clear(sf::Color::Black);
+        // window.display();
+
+        // while (window.isOpen()) {
+        //     sf::Event event;
+        //     while (window.pollEvent(event)) {
+        //         if (event.type == sf::Event::Closed) {
+        //             window.close();
+        //         }
+        //     }
+        // }
+    )
 
     // // Отрисовка координатной прямой посередине экрана
     // // Создание вертикальной линии
@@ -86,16 +104,7 @@ int main() {
     // window.draw(verticalLine, 2, sf::Lines);
     // window.draw(horizontalLine, 2, sf::Lines);
 
-    window.display();
-
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
-        }
-    }
-
-    return 0;
+    // return 0;
 }
+
+CRITERION_BENCHMARK_MAIN()
