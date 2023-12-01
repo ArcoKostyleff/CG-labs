@@ -2,7 +2,8 @@
 #include <cmath>
 #include <stack>
 
-sf::Vector2f getPointInsidePolygon(const std::vector<sf::Vector2f>& vertices) {
+sf::Vector2f getPointInsidePolygon(const std::vector<sf::Vector2f>& vertices)
+{
     sf::Vector2f center(0.f, 0.f);
     // Вычисляем сумму координат вершин многоугольника
     for (const auto& vertex : vertices) {
@@ -17,7 +18,8 @@ sf::Vector2f getPointInsidePolygon(const std::vector<sf::Vector2f>& vertices) {
 /// @param color Цвет пикселя
 /// @param x Координата X
 /// @param y Координата Y
-void putPixel(sf::RenderWindow &window, sf::Color color, int x, int y) {
+void putPixel(sf::RenderWindow& window, sf::Color color, int x, int y)
+{
     sf::RectangleShape pixel(sf::Vector2f(1, 1));
     pixel.setPosition(x, y);
     pixel.setFillColor(color);
@@ -29,7 +31,8 @@ void putPixel(sf::RenderWindow &window, sf::Color color, int x, int y) {
 /// @param point1 Первая точка
 /// @param point2 Вторая точка
 /// @param color Цвет линии
-void drawLineDDA(sf::RenderWindow &window, sf::Vector2f point1, sf::Vector2f point2, sf::Color color) {
+void drawLineDDA(sf::RenderWindow& window, sf::Vector2f point1, sf::Vector2f point2, sf::Color color)
+{
     // Определяем разницу между двумя точками
     float dx = point2.x - point1.x;
     float dy = point2.y - point1.y;
@@ -54,7 +57,8 @@ void drawLineDDA(sf::RenderWindow &window, sf::Vector2f point1, sf::Vector2f poi
 /// @param point1 Начало отрезка
 /// @param point2 Конец отрезка
 /// @param color Цвет линии
-void drawLineBresenham(sf::RenderWindow &window, sf::Vector2f point1, sf::Vector2f point2, sf::Color color) {
+void drawLineBresenham(sf::RenderWindow& window, sf::Vector2f point1, sf::Vector2f point2, sf::Color color)
+{
     int x1 = point1.x;
     int y1 = point1.y;
     int x2 = point2.x;
@@ -63,32 +67,45 @@ void drawLineBresenham(sf::RenderWindow &window, sf::Vector2f point1, sf::Vector
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
     // Определяем направления инкремента
-    int sx = x1 < x2 ? 1 : -1;  
-    int sy = y1 < y2 ? 1 : -1; 
+    int sx = x1 < x2 ? 1 : -1;
+    int sy = y1 < y2 ? 1 : -1;
     // Определяем ошибку
     int err = (dx > dy ? dx : -dy) / 2;
     int e2;
     // Отрисовка отрезка
-    while(true) {
+    while (true) {
         // Отрисовка пикселя
         putPixel(window, color, x1, y1);
         // Если достигнут конец отрезка
-        if (x1 == x2 && y1 == y2) break;
+        if (x1 == x2 && y1 == y2)
+            break;
         // Определяем новую ошибку
         e2 = err;
-        if (e2 > -dx) { 
-            err -= dy; 
-            x1 += sx; 
+        if (e2 > -dx) {
+            err -= dy;
+            x1 += sx;
         }
-        if (e2 < dy) { 
-            err += dx; 
-            y1 += sy; 
+        if (e2 < dy) {
+            err += dx;
+            y1 += sy;
         }
     }
 }
 
 // Отрисовка многоугольника
-void drawPolygon(sf::RenderWindow &window, const std::vector<sf::Vector2f> &points, sf::Color color) {
+void drawPolygonA(sf::RenderWindow& window, const std::vector<sf::Vector2f>& points, sf::Color color)
+{
+    // Соединяем точки между собой
+    for (size_t i = 0; i < points.size() - 1; i++) {
+        drawLineDDA(window, points[i], points[i + 1], color);
+    }
+    // Соединяем первую и последнюю точку
+    drawLineDDA(window, points.back(), points.front(), color);
+}
+
+// Отрисовка многоугольника
+void drawPolygonB(sf::RenderWindow& window, const std::vector<sf::Vector2f>& points, sf::Color color)
+{
     // Соединяем точки между собой
     for (size_t i = 0; i < points.size() - 1; i++) {
         drawLineBresenham(window, points[i], points[i + 1], color);
@@ -98,25 +115,31 @@ void drawPolygon(sf::RenderWindow &window, const std::vector<sf::Vector2f> &poin
 }
 
 // Рекурсивная заливка
-void _floodFillImage(sf::Image &image, int x, int y, sf::Color outlineColor, sf::Color newColor) {
+void _floodFillImage(sf::Image& image, int x, int y, sf::Color outlineColor, sf::Color newColor)
+{
     // Проверяем выход за границы
-    if (x < 0 || y < 0) return;
-    if (x >= image.getSize().x || y >= image.getSize().y) return;
+    if (x < 0 || y < 0)
+        return;
+    if (x >= image.getSize().x || y >= image.getSize().y)
+        return;
     // Проверяем пиксель на цвет
     sf::Color color = image.getPixel(x, y);
-    if (color == outlineColor) return;  // Граничный цвет
-    if (color == newColor) return;      // Цвет заливки
+    if (color == outlineColor)
+        return; // Граничный цвет
+    if (color == newColor)
+        return; // Цвет заливки
     // Устанавливаем цвет пискелю
     image.setPixel(x, y, newColor);
     // Рекурсивно заполняем соседние пиксели
-    _floodFillImage(image, x+1, y, outlineColor, newColor);
-    _floodFillImage(image, x-1, y, outlineColor, newColor);
-    _floodFillImage(image, x, y+1, outlineColor, newColor);
-    _floodFillImage(image, x, y-1, outlineColor, newColor);
+    _floodFillImage(image, x + 1, y, outlineColor, newColor);
+    _floodFillImage(image, x - 1, y, outlineColor, newColor);
+    _floodFillImage(image, x, y + 1, outlineColor, newColor);
+    _floodFillImage(image, x, y - 1, outlineColor, newColor);
 }
 
 // Заливка
-void floodFill(sf::RenderWindow &window, int x, int y, sf::Color outlineColor, sf::Color newColor) {
+void floodFill(sf::RenderWindow& window, int x, int y, sf::Color outlineColor, sf::Color newColor)
+{
     // Конвертируем в image
     sf::Texture texture;
     texture.create(window.getSize().x, window.getSize().y);
@@ -132,7 +155,8 @@ void floodFill(sf::RenderWindow &window, int x, int y, sf::Color outlineColor, s
 }
 
 // Стековый алгоритм заливки
-void modifiedStackFloodFill(sf::RenderWindow &window, int x, int y, sf::Color outlineColor, sf::Color newColor) {
+void modifiedStackFloodFill(sf::RenderWindow& window, int x, int y, sf::Color outlineColor, sf::Color newColor)
+{
     // Конвертируем в image
     sf::Texture texture;
     texture.create(window.getSize().x, window.getSize().y);
@@ -140,27 +164,31 @@ void modifiedStackFloodFill(sf::RenderWindow &window, int x, int y, sf::Color ou
     sf::Image image = texture.copyToImage();
     // Созадем стек и помещаем в него первую точку
     std::stack<std::pair<int, int>> s;
-    s.push({x, y});
+    s.push({ x, y });
     // Заливаем фигуру цветом
-    while(!s.empty()) {
+    while (!s.empty()) {
         // Извлекаем точку
         int x = s.top().first;
         int y = s.top().second;
         s.pop();
         // Проверяем выход за границы
-        if (x < 0 || y < 0) continue;
-        if (x >= image.getSize().x || y >= image.getSize().y) continue;
+        if (x < 0 || y < 0)
+            continue;
+        if (x >= image.getSize().x || y >= image.getSize().y)
+            continue;
         // Проверяем пиксель на цвет
         sf::Color color = image.getPixel(x, y);
-        if (color == outlineColor) continue; 
-        if (color == newColor) continue;
+        if (color == outlineColor)
+            continue;
+        if (color == newColor)
+            continue;
         // Устанавливаем цвет пискелю
         image.setPixel(x, y, newColor);
         // Добавляем в стек соседние точки
-        s.push({x+1, y});
-        s.push({x-1, y});
-        s.push({x, y+1});
-        s.push({x, y-1});
+        s.push({ x + 1, y });
+        s.push({ x - 1, y });
+        s.push({ x, y + 1 });
+        s.push({ x, y - 1 });
     }
     // Отображаем залитое изображение
     window.clear();
