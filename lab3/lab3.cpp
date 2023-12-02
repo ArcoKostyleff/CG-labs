@@ -1,10 +1,8 @@
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/System/Vector2.hpp>
-#include <chrono>
-#include <fstream>
 #include <iostream>
+#include <fstream>
 #include <sstream>
+#include <chrono>
 #include <thread>
 
 #include "funcs.h"
@@ -18,8 +16,7 @@ struct Polygon {
     std::vector<sf::Vector2f> points;
 };
 
-std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale = 1, int shiftX = 0, int shiftY = 0)
-{
+std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale = 1, int shiftX = 0, int shiftY = 0) {
     std::ifstream in(filename);
     std::vector<Polygon> polygons;
     if (!in.is_open()) {
@@ -51,29 +48,43 @@ std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale
     return polygons;
 }
 
-int main()
-{
+
+int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab 3 - Variant 1");
-    window.clear(sf::Color::White);
+    window.clear(sf::Color::Black);
+    auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
-    // drawStar(window, sf::Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), 70);
+    for (auto& polygon : polygons) {
+        std::cout << "Draw pollygon" << std::endl;
+        std::cout << "Points count: " << polygon.points.size() << std::endl;
+        std::cout << "Color: " << (int)polygon.color.r << " " << (int)polygon.color.g << " " << (int)polygon.color.b << std::endl;
+        for (auto& point : polygon.points)
+            std::cout << '(' << point.x << "; " << point.y << ')' << std::endl;
+        std::cout << std::endl;
 
-    // for (int h = 10; h <= 1000; h += 10) {
-    //     drawStar(window, sf::Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), h);
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    //     // floodFill(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, sf::Color(255, 255, 255), sf::Color(255, 255, 0, 50));
-
-    //     window.display();
-    // }
-
-    for (int h = 280; h >= 10; h -= 20) {
-        drawStar(window, sf::Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), h, sf::Color::Black);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-        floodFill(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, sf::Color(255, 255, 255), sf::Color(255, (sf::Uint8)std::min(255, h), 0, 50));
-
-        // window.display();
+        drawPolygon(window, polygon.points, polygon.color);
+        auto point = getPointInsidePolygon(polygon.points);
+        floodFill(window, point.x, point.y, polygon.color, polygon.color);
+        window.display();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
+
+    // // Отрисовка координатной прямой посередине экрана
+    // // Создание вертикальной линии
+    // sf::Vertex verticalLine[] =
+    // {
+    //     sf::Vertex(sf::Vector2f(window.getSize().x / 2, 0), sf::Color::White),
+    //     sf::Vertex(sf::Vector2f(window.getSize().x / 2, window.getSize().y), sf::Color::White)
+    // };
+    // // Создание горизонтальной линии
+    // sf::Vertex horizontalLine[] =
+    // {
+    //     sf::Vertex(sf::Vector2f(0, window.getSize().y / 2), sf::Color::White),
+    //     sf::Vertex(sf::Vector2f(window.getSize().x, window.getSize().y / 2), sf::Color::White)
+    // };
+
+    // window.draw(verticalLine, 2, sf::Lines);
+    // window.draw(horizontalLine, 2, sf::Lines);
 
     window.display();
 
