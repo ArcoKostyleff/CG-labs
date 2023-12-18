@@ -1,8 +1,8 @@
 #include <SFML/Graphics.hpp>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 #include <thread>
 
 #include "funcs.h"
@@ -16,7 +16,8 @@ struct Polygon {
     std::vector<sf::Vector2f> points;
 };
 
-std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale = 1, int shiftX = 0, int shiftY = 0) {
+std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale = 1, int shiftX = 0, int shiftY = 0)
+{
     std::ifstream in(filename);
     std::vector<Polygon> polygons;
     if (!in.is_open()) {
@@ -40,6 +41,7 @@ std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale
         for (int j = 0; j < pointsCount; j++) {
             float x, y;
             in >> x >> y;
+            y = 15 - y;
             polygon.points.push_back(sf::Vector2f(x * scale + shiftX, y * scale + shiftY));
         }
         polygons.push_back(polygon);
@@ -48,10 +50,10 @@ std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale
     return polygons;
 }
 
-
-int main() {
+int main()
+{
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab 3 - Variant 1");
-    window.clear(sf::Color::Black);
+    window.clear(sf::Color::White);
     auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
     for (auto& polygon : polygons) {
@@ -65,6 +67,7 @@ int main() {
         drawPolygon(window, polygon.points, polygon.color);
         auto point = getPointInsidePolygon(polygon.points);
         floodFill(window, point.x, point.y, polygon.color, polygon.color);
+        drawPolygon(window, polygon.points, sf::Color::Black);
         window.display();
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
