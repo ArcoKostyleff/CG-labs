@@ -7,7 +7,8 @@
 /// @param startAngle Начальный угол дуги в градусах.
 /// @param endAngle Конечный угол дуги в градусах.
 /// @param center Центральная точка дуги.
-void drawPolarCircleArc(sf::RenderWindow &window, float radius, float startAngle, float endAngle, sf::Vector2f center) {
+void drawPolarCircleArc(sf::RenderWindow& window, float radius, float startAngle, float endAngle, sf::Vector2f center)
+{
     // Create an image to draw on
     sf::Image image;
     image.create(window.getSize().x, window.getSize().y, sf::Color::Black);
@@ -35,7 +36,7 @@ void drawPolarCircleArc(sf::RenderWindow &window, float radius, float startAngle
     sf::Texture texture;
     texture.loadFromImage(image);
     sf::Sprite sprite(texture);
-
-    // Draw the sprite
-    window.draw(sprite);
+    // Draw the sprite window.draw(sprite);ASDASDLKJ
 }
+
+ASDAS

@@ -1,36 +1,77 @@
 #include "funcs.h"
 #include <SFML/Graphics.hpp>
+#include <fstream>
+#include <iostream>
+#include <thread>
 
-void cohenSutherland(sf::Vector2f& p1, sf::Vector2f& p2, sf::Vector2f min, sf::Vector2f max)
+const int SCALE = 15;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
+
+struct Polygon {
+    sf::Color color;
+    std::vector<sf::Vector2f> points;
+};
+
+std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale = 1, int shiftX = 0, int shiftY = 0)
 {
+    std::ifstream in(filename);
+    std::vector<Polygon> polygons;
+    if (!in.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return polygons;
+    }
+    // Количество полигонов
+    int polygonsCount;
+    in >> polygonsCount;
+    std::cout << "Polygons count: " << polygonsCount << std::endl;
+    // Считываем полигоны
+    for (int i = 0; i < polygonsCount; i++) {
+        int pointsCount;
+        int r, g, b;
+        Polygon polygon;
+        in >> pointsCount;
+        in >> r >> g >> b;
+        polygon.color.r = r;
+        polygon.color.g = g;
+        polygon.color.b = b;
+        for (int j = 0; j < pointsCount; j++) {
+            float x, y;
+            in >> x >> y;
+            y = 15 - y;
+            polygon.points.push_back(sf::Vector2f(x * scale + shiftX, y * scale + shiftY));
+        }
+        polygons.push_back(polygon);
+    }
+    in.close();
+    return polygons;
+}
 
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Cohen-Sutherland Algorithm");
+const int LEFT = 1, RIGHT = 2, BOTTOM = 4, TOP = 8;
+int calculateCode(sf::Vector2f& p, sf::Vector2f& min, sf::Vector2f& max)
+{
+    int code = 0;
+    if (p.x < min.x)
+        code |= LEFT;
+    else if (p.x > max.x)
+        code |= RIGHT;
 
-    window.clear();
+    if (p.y < min.y)
+        code |= BOTTOM;
+    else if (p.y > max.y)
+        code |= TOP;
 
-    const int LEFT = 1, RIGHT = 2, BOTTOM = 4, TOP = 8;
+    return code;
+}
+void cohenSutherland(sf::RenderWindow& window, sf::Vector2f p1,
+    sf::Vector2f p2, sf::Vector2f min, sf::Vector2f max,
+    sf::Color color, bool drawCropped = false)
+{
 
     int code1 = 0, code2 = 0;
 
-    if (p1.x < min.x)
-        code1 |= LEFT;
-    else if (p1.x > max.x)
-        code1 |= RIGHT;
-
-    if (p1.y < min.y)
-        code1 |= BOTTOM;
-    else if (p1.y > max.y)
-        code1 |= TOP;
-
-    if (p2.x < min.x)
-        code2 |= LEFT;
-    else if (p2.x > max.x)
-        code2 |= RIGHT;
-
-    if (p2.y < min.y)
-        code2 |= BOTTOM;
-    else if (p2.y > max.y)
-        code2 |= TOP;
+    code1 = calculateCode(p1, min, max);
+    code2 = calculateCode(p2, min, max);
 
     bool accept = false;
 
@@ -64,51 +105,93 @@ void cohenSutherland(sf::Vector2f& p1, sf::Vector2f& p2, sf::Vector2f min, sf::V
             }
 
             if (codeOut == code1) {
-
-                drawLineBresenham(window, p1, { x, y }, sf::Color::Red);
+                if (drawCropped)
+                    drawLineBresenham(window, p1, { x, y }, sf::Color::Red);
 
                 p1.x = x;
                 p1.y = y;
                 code1 = 0;
-                if (p1.x < min.x)
-                    code1 |= LEFT;
-                else if (p1.x > max.x)
-                    code1 |= RIGHT;
 
-                if (p1.y < min.y)
-                    code1 |= BOTTOM;
-                else if (p1.y > max.y)
-                    code1 |= TOP;
+                code1 = calculateCode(p1, min, max);
+
             } else {
-                drawLineBresenham(window, { x, y }, p2, sf::Color::Red);
+                if (drawCropped)
+                    drawLineBresenham(window, { x, y }, p2, sf::Color::Red);
+
                 p2.x = x;
                 p2.y = y;
                 code2 = 0;
-                if (p2.x < min.x)
-                    code2 |= LEFT;
-                else if (p2.x > max.x)
-                    code2 |= RIGHT;
 
-                if (p2.y < min.y)
-                    code2 |= BOTTOM;
-                else if (p2.y > max.y)
-                    code2 |= TOP;
+                code2 = calculateCode(p2, min, max);
             }
         }
     }
 
-    // Рисуем рамку кадрирования
-    sf::RectangleShape rect;
-    rect.setPosition(min);
-    rect.setSize(max - min);
-    rect.setFillColor(sf::Color::Transparent);
-    rect.setOutlineThickness(1);
-    rect.setOutlineColor(sf::Color::Green);
-    window.draw(rect);
+    if (accept)
+        drawLineBresenham(window, p1, p2, color);
+    else if (drawCropped)
+        drawLineBresenham(window, p1, p2, sf::Color::Red);
+}
 
-    // drawLineBresenham(window, p1, p2, sf::Color::White);
+// Отрисовка многоугольника
+void drawPolygonCropped(sf::RenderWindow& window, std::vector<sf::Vector2f>& points, sf::Vector2f min, sf::Vector2f max, sf::Color color, bool drawCropped = false)
+{
+    // Соединяем точки между собой
+    for (size_t i = 0; i < points.size() - 1; i++) {
+        cohenSutherland(window, points[i], points[i + 1], min, max, color, drawCropped);
+    }
+    // Соединяем первую и последнюю точку
+    cohenSutherland(window, points.back(), points.front(), min, max, color, drawCropped);
+}
 
-    window.display();
+int main()
+{
+    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab4");
+    window.clear(sf::Color::Black);
+    auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
+
+    sf::Vector2f p1(0, 0);
+    sf::Vector2f p2(300, 250);
+    sf::Vector2f min(150, 100);
+    sf::Vector2f max(250, 200);
+    for (int i = 0; i < 100; i++) {
+        window.clear();
+        max.y++;
+
+        for (auto& polygon : polygons) {
+            // break;
+            std::cout << "Draw pollygon" << std::endl;
+            std::cout << "Points count: " << polygon.points.size() << std::endl;
+            std::cout << "Color: " << (int)polygon.color.r << " " << (int)polygon.color.g << " " << (int)polygon.color.b << std::endl;
+            for (auto& point : polygon.points)
+                std::cout << '(' << point.x << "; " << point.y << ')' << std::endl;
+            std::cout << std::endl;
+            // window.clear();
+            drawLineDDA(window, { min.x, min.y }, { max.x, min.y }, sf::Color::Green);
+            drawLineDDA(window, { max.x, min.y }, { max.x, max.y }, sf::Color::Green);
+            drawLineDDA(window, { max.x, max.y }, { min.x, max.y }, sf::Color::Green);
+            drawLineDDA(window, { min.x, max.y }, { min.x, min.y }, sf::Color::Green);
+
+            // drawPolygon(window, polygon.points, sf::Color::Cyan);
+            drawPolygonCropped(window, polygon.points, min, max, polygon.color, false);
+            // window.display();
+
+            // auto point = getPointInsidePolygon(polygon.points);
+            // floodFill(window, point.x, point.y, polygon.color, polygon.color);
+            // drawPolygon(window, polygon.points, sf::Color::Magenta);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+
+        drawLineDDA(window, { min.x, min.y }, { max.x, min.y }, sf::Color::Green);
+        drawLineDDA(window, { max.x, min.y }, { max.x, max.y }, sf::Color::Green);
+        drawLineDDA(window, { max.x, max.y }, { min.x, max.y }, sf::Color::Green);
+        drawLineDDA(window, { min.x, max.y }, { min.x, min.y }, sf::Color::Green);
+
+        // cohenSutherland(window, p1, p2, min, max, sf::Color::Blue, true);
+
+        window.display();
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    }
 
     while (window.isOpen()) {
 
@@ -120,16 +203,6 @@ void cohenSutherland(sf::Vector2f& p1, sf::Vector2f& p2, sf::Vector2f min, sf::V
             }
         }
     }
-}
-
-int main()
-{
-    sf::Vector2f p1(0, 0);
-    sf::Vector2f p2(300, 250);
-    sf::Vector2f min(150, 100);
-    sf::Vector2f max(250, 200);
-
-    cohenSutherland(p1, p2, min, max);
 
     return 0;
 }
