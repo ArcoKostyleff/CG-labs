@@ -403,8 +403,52 @@ Polygon suthHodgClip(const Polygon &poly_points, const Polygon &clipper_points)
 	return newP;
 }
 
+class Renderer {
+public:
+	void wievA() {
+
+		window.display();
+	}
+	void wievB() {
+		
+		window.display();
+	}
+	void DLDDA() {
+		drawLineDDA(window, { min.x, min.y }, { max.x, min.y }, sf::Color::Green);
+		drawLineDDA(window, { max.x, min.y }, { max.x, max.y }, sf::Color::Green);
+		drawLineDDA(window, { max.x, max.y }, { min.x, max.y }, sf::Color::Green);
+		drawLineDDA(window, { min.x, max.y }, { min.x, min.y }, sf::Color::Green);
+	}
+	void toggleWievMode() {
+		if (modeA) {
+			modeA = false;
+			wievA();
+		}
+		else {
+			modeA = true;
+			wievB();
+		}
+	}
+	sf::RenderWindow window{ sf::VideoMode{WINDOW_WIDTH, WINDOW_HEIGHT}, "Lab 3 - Variant 1" };
+	Renderer() {
+		window.clear(sf::Color::White);
+		polygons = readPolygonsFromFile("pollygons.txt", SCALE, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+		std::reverse(polygons.begin(), polygons.end());
+		
+	}
+	std::vector<Polygon> polygons;
+
+private:
+	sf::Vector2f p1{ 0, 0 };
+	sf::Vector2f p2{ 300, 250 };
+	sf::Vector2f min{ 150, 100 };
+	sf::Vector2f max{ 250, 200 };
+	bool modeA = 1;
+};
 int main()
 {
+		Renderer wnd;
+
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab4");
     window.clear(sf::Color::Black);
     auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
@@ -419,6 +463,10 @@ int main()
         sf::Event event;
         while (window.pollEvent(event)) {
             switch (event.type) {
+	    case (sf::Keyboard::isKeyPressed(sf::Keyboard::A)): {
+				wnd.toggleWievMode();
+		    break;
+	}
             case sf::Event::Closed:
                 window.close();
                 break;
