@@ -152,24 +152,45 @@ sf::Vector2f max(250, 200);
 void drawFox(sf::RenderWindow& window, std::vector<Polygon>& polygons)
 {
     window.clear();
-    sf::Image prevLayer;
-    prevLayer.create(window.getSize().x, window.getSize().y, sf::Color::Transparent);
+    std::vector<sf::Image> layers;
     for (auto& polygon : polygons) {
 
         sf::Image currentLayer;
         currentLayer.create(window.getSize().x, window.getSize().y, sf::Color::Transparent);
+
+        polygon.color.a = 160;
 
         drawPolygonCropped(currentLayer, polygon.points, min, max, sf::Color::Black, true);
 
         auto middlePoint = getPointInsidePolygon(polygon.points);
         modifiedStackFloodFill(currentLayer, middlePoint.x, middlePoint.y, polygon.color, min, max);
 
-        sf::Texture texture;
-        texture.loadFromImage(currentLayer);
-        sf::Sprite sprite(texture);
-
-        window.draw(sprite);
+        layers.push_back(currentLayer);
     }
+
+    sf::Image image = layers[0];
+
+    for (int i = 1; i < layers.size(); i++) {
+        for (int y = 0; y < image.getSize().y; y++) {
+            for (int x = 0; x < image.getSize().x; x++) {
+
+                // Смешиваем цвета с учетом альфа-канала
+                sf::Color blendedColor;
+                sf::Color newColor = layers[i].getPixel(x, y);
+                sf::Color color = image.getPixel(x, y);
+                blendedColor.r = (newColor.r * newColor.a + color.r * (255 - newColor.a)) / 255.0;
+                blendedColor.g = (newColor.g * newColor.a + color.g * (255 - newColor.a)) / 255.0;
+                blendedColor.b = (newColor.b * newColor.a + color.b * (255 - newColor.a)) / 255.0;
+
+                image.setPixel(x, y, blendedColor);
+            }
+        }
+    }
+
+    sf::Texture texture;
+    texture.loadFromImage(image);
+    sf::Sprite sprite(texture);
+    window.draw(sprite);
 
     drawLineDDA(window, { min.x, min.y }, { max.x, min.y }, sf::Color::Green);
     drawLineDDA(window, { max.x, min.y }, { max.x, max.y }, sf::Color::Green);
