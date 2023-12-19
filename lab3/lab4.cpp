@@ -149,7 +149,7 @@ void drawPolygonCropped(sf::Image& window, std::vector<sf::Vector2f> points, sf:
 sf::Vector2f min(150, 100);
 sf::Vector2f max(250, 200);
 
-void drawFox(sf::RenderWindow& window, std::vector<Polygon>& polygons)
+void drawFox(sf::RenderWindow& window, std::vector<Polygon>& polygons, bool drawAllBorders = false)
 {
     window.clear();
     std::vector<sf::Image> layers;
@@ -157,8 +157,6 @@ void drawFox(sf::RenderWindow& window, std::vector<Polygon>& polygons)
 
         sf::Image currentLayer;
         currentLayer.create(window.getSize().x, window.getSize().y, sf::Color::Transparent);
-
-        polygon.color.a = 160;
 
         drawPolygonCropped(currentLayer, polygon.points, min, max, sf::Color::Black, true);
 
@@ -184,6 +182,12 @@ void drawFox(sf::RenderWindow& window, std::vector<Polygon>& polygons)
 
                 image.setPixel(x, y, blendedColor);
             }
+        }
+    }
+
+    if (drawAllBorders) {
+        for (auto& polygon : polygons) {
+            drawPolygonCropped(image, polygon.points, min, max, sf::Color::Black, true);
         }
     }
 
@@ -222,7 +226,7 @@ int main()
                 sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
                 min = mousePos - sf::Vector2f(30, 30);
                 max = mousePos + sf::Vector2f(30, 30);
-                drawFox(window, polygons);
+                drawFox(window, polygons, false);
                 break;
             }
         }

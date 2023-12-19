@@ -237,9 +237,4 @@ void modifiedStackFloodFill(sf::Image& window, int x, int y, sf::Color newColor,
         s.push({ x, y + 1 });
         s.push({ x, y - 1 });
     }
-    // Отображаем залитое изображение
-    // window.clear(sf::Color::Cyan);
-    // texture.loadFromImage(image);
-    // sf::Sprite sprite(texture);
-    // window.draw(sprite);
 }
