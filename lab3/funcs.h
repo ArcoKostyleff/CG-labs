@@ -1,6 +1,9 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <iostream>
+#include <set>
 #include <stack>
+#include <unordered_set>
 
 sf::Vector2f getPointInsidePolygon(const std::vector<sf::Vector2f>& vertices)
 {
@@ -92,6 +95,46 @@ void drawLineBresenham(sf::RenderWindow& window, sf::Vector2f point1, sf::Vector
     }
 }
 
+/// @brief Рисует линию с использованием алгоритма Брезенхема.
+/// @param window Основное окно
+/// @param point1 Начало отрезка
+/// @param point2 Конец отрезка
+/// @param color Цвет линии
+void drawLineBresenham(sf::Image& image, sf::Vector2f point1, sf::Vector2f point2, sf::Color color)
+{
+    int x1 = point1.x;
+    int y1 = point1.y;
+    int x2 = point2.x;
+    int y2 = point2.y;
+    // Разница между координатами
+    int dx = abs(x2 - x1);
+    int dy = abs(y2 - y1);
+    // Определяем направления инкремента
+    int sx = x1 < x2 ? 1 : -1;
+    int sy = y1 < y2 ? 1 : -1;
+    // Определяем ошибку
+    int err = (dx > dy ? dx : -dy) / 2;
+    int e2;
+    // Отрисовка отрезка
+    while (true) {
+        // Отрисовка пикселя
+        image.setPixel(x1, y1, color);
+        // Если достигнут конец отрезка
+        if (x1 == x2 && y1 == y2)
+            break;
+        // Определяем новую ошибку
+        e2 = err;
+        if (e2 > -dx) {
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dy) {
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
+
 // Отрисовка многоугольника
 void drawPolygon(sf::RenderWindow& window, const std::vector<sf::Vector2f>& points, sf::Color color)
 {
@@ -127,7 +170,7 @@ void _floodFillImage(sf::Image& image, int x, int y, sf::Color outlineColor, sf:
 }
 
 // Заливка
-void floodFill(sf::RenderWindow& window, int x, int y, sf::Color outlineColor, sf::Color newColor)
+void floodFill(sf::Image& window, int x, int y, sf::Color outlineColor, sf::Color newColor)
 {
     // Конвертируем в image
     sf::Texture texture;
@@ -135,22 +178,25 @@ void floodFill(sf::RenderWindow& window, int x, int y, sf::Color outlineColor, s
     texture.update(window);
     sf::Image image = texture.copyToImage();
     // Начинаем рекурсивную заливку
-    _floodFillImage(image, x, y, outlineColor, newColor);
+    _floodFillImage(window, x, y, outlineColor, newColor);
     // Отображаем залитое изображение
-    window.clear(sf::Color::Red);
-    texture.loadFromImage(image);
-    sf::Sprite sprite(texture);
-    window.draw(sprite);
+    // window.create(window.getSize().x, window.getSize().y, sf::Color::Transparent);
+    // texture.loadFromImage(image);
+    // sf::Sprite sprite(texture);
+    // window.draw(sprite);
 }
 
 // Стековый алгоритм заливки
-void modifiedStackFloodFill(sf::RenderWindow& window, int x, int y, sf::Color outlineColor, sf::Color newColor)
+void modifiedStackFloodFill(sf::Image& window, int x, int y, sf::Color newColor, sf::Vector2f min, sf::Vector2f max)
 {
+    std::set<std::pair<int, int>> visited;
+
+    sf::Color currentColor = window.getPixel(x, y);
     // Конвертируем в image
-    sf::Texture texture;
-    texture.create(window.getSize().x, window.getSize().y);
-    texture.update(window);
-    sf::Image image = texture.copyToImage();
+    // sf::Texture texture;
+    // texture.create(window.getSize().x, window.getSize().y);
+    // texture.update(window);
+    sf::Image& image = window;
     // Созадем стек и помещаем в него первую точку
     std::stack<std::pair<int, int>> s;
     s.push({ x, y });
@@ -165,14 +211,26 @@ void modifiedStackFloodFill(sf::RenderWindow& window, int x, int y, sf::Color ou
             continue;
         if (x >= image.getSize().x || y >= image.getSize().y)
             continue;
+        if (visited.find({ x, y }) != visited.end())
+            continue;
+        // if (x < min.x || y < min.y)
+        //     continue;
+        // if (x > max.x || y > max.y)
+        //     continue;
         // Проверяем пиксель на цвет
         sf::Color color = image.getPixel(x, y);
-        if (color == outlineColor)
-            continue;
-        if (color == newColor)
+        // if (color == outlineColor)
+        //     continue;
+        // if (color == newColor)
+        //     continue;
+        if (color != currentColor)
             continue;
         // Устанавливаем цвет пискелю
-        image.setPixel(x, y, newColor);
+        if (!(x < min.x || y < min.y) && !(x > max.x || y > max.y))
+            image.setPixel(x, y, newColor);
+        else
+            visited.insert({ x, y });
+
         // Добавляем в стек соседние точки
         s.push({ x + 1, y });
         s.push({ x - 1, y });
@@ -180,8 +238,8 @@ void modifiedStackFloodFill(sf::RenderWindow& window, int x, int y, sf::Color ou
         s.push({ x, y - 1 });
     }
     // Отображаем залитое изображение
-    window.clear(sf::Color::Cyan);
-    texture.loadFromImage(image);
-    sf::Sprite sprite(texture);
-    window.draw(sprite);
+    // window.clear(sf::Color::Cyan);
+    // texture.loadFromImage(image);
+    // sf::Sprite sprite(texture);
+    // window.draw(sprite);
 }

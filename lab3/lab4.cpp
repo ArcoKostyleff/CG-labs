@@ -1,12 +1,14 @@
 #include "funcs.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <fstream>
 #include <iostream>
 #include <thread>
 
 const int SCALE = 15;
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 400;
+const int WINDOW_HEIGHT = 300;
 
 struct Polygon {
     sf::Color color;
@@ -63,7 +65,7 @@ int calculateCode(sf::Vector2f& p, sf::Vector2f& min, sf::Vector2f& max)
 
     return code;
 }
-void cohenSutherland(sf::RenderWindow& window, sf::Vector2f p1,
+void cohenSutherland(sf::Image& window, sf::Vector2f p1,
     sf::Vector2f p2, sf::Vector2f min, sf::Vector2f max,
     sf::Color color, bool drawCropped = false)
 {
@@ -134,7 +136,7 @@ void cohenSutherland(sf::RenderWindow& window, sf::Vector2f p1,
 }
 
 // Отрисовка многоугольника
-void drawPolygonCropped(sf::RenderWindow& window, std::vector<sf::Vector2f>& points, sf::Vector2f min, sf::Vector2f max, sf::Color color, bool drawCropped = false)
+void drawPolygonCropped(sf::Image& window, std::vector<sf::Vector2f> points, sf::Vector2f min, sf::Vector2f max, sf::Color color, bool drawCropped = false)
 {
     // Соединяем точки между собой
     for (size_t i = 0; i < points.size() - 1; i++) {
@@ -144,62 +146,63 @@ void drawPolygonCropped(sf::RenderWindow& window, std::vector<sf::Vector2f>& poi
     cohenSutherland(window, points.back(), points.front(), min, max, color, drawCropped);
 }
 
+sf::Vector2f min(150, 100);
+sf::Vector2f max(250, 200);
+
+void drawFox(sf::RenderWindow& window, std::vector<Polygon>& polygons)
+{
+    window.clear();
+    sf::Image prevLayer;
+    prevLayer.create(window.getSize().x, window.getSize().y, sf::Color::Transparent);
+    for (auto& polygon : polygons) {
+
+        sf::Image currentLayer;
+        currentLayer.create(window.getSize().x, window.getSize().y, sf::Color::Transparent);
+
+        drawPolygonCropped(currentLayer, polygon.points, min, max, sf::Color::Black, true);
+
+        auto middlePoint = getPointInsidePolygon(polygon.points);
+        modifiedStackFloodFill(currentLayer, middlePoint.x, middlePoint.y, polygon.color, min, max);
+
+        sf::Texture texture;
+        texture.loadFromImage(currentLayer);
+        sf::Sprite sprite(texture);
+
+        window.draw(sprite);
+    }
+
+    drawLineDDA(window, { min.x, min.y }, { max.x, min.y }, sf::Color::Green);
+    drawLineDDA(window, { max.x, min.y }, { max.x, max.y }, sf::Color::Green);
+    drawLineDDA(window, { max.x, max.y }, { min.x, max.y }, sf::Color::Green);
+    drawLineDDA(window, { min.x, max.y }, { min.x, min.y }, sf::Color::Green);
+
+    window.display();
+}
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab4");
     window.clear(sf::Color::Black);
     auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
 
-    sf::Vector2f p1(0, 0);
-    sf::Vector2f p2(300, 250);
-    sf::Vector2f min(150, 100);
-    sf::Vector2f max(250, 200);
-    for (int i = 0; i < 100; i++) {
-        window.clear();
-        max.y++;
+    drawFox(window, polygons);
 
-        for (auto& polygon : polygons) {
-            // break;
-            std::cout << "Draw pollygon" << std::endl;
-            std::cout << "Points count: " << polygon.points.size() << std::endl;
-            std::cout << "Color: " << (int)polygon.color.r << " " << (int)polygon.color.g << " " << (int)polygon.color.b << std::endl;
-            for (auto& point : polygon.points)
-                std::cout << '(' << point.x << "; " << point.y << ')' << std::endl;
-            std::cout << std::endl;
-            // window.clear();
-            drawLineDDA(window, { min.x, min.y }, { max.x, min.y }, sf::Color::Green);
-            drawLineDDA(window, { max.x, min.y }, { max.x, max.y }, sf::Color::Green);
-            drawLineDDA(window, { max.x, max.y }, { min.x, max.y }, sf::Color::Green);
-            drawLineDDA(window, { min.x, max.y }, { min.x, min.y }, sf::Color::Green);
+    window.display();
 
-            // drawPolygon(window, polygon.points, sf::Color::Cyan);
-            drawPolygonCropped(window, polygon.points, min, max, polygon.color, false);
-            // window.display();
-
-            // auto point = getPointInsidePolygon(polygon.points);
-            // floodFill(window, point.x, point.y, polygon.color, polygon.color);
-            // drawPolygon(window, polygon.points, sf::Color::Magenta);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
-
-        drawLineDDA(window, { min.x, min.y }, { max.x, min.y }, sf::Color::Green);
-        drawLineDDA(window, { max.x, min.y }, { max.x, max.y }, sf::Color::Green);
-        drawLineDDA(window, { max.x, max.y }, { min.x, max.y }, sf::Color::Green);
-        drawLineDDA(window, { min.x, max.y }, { min.x, min.y }, sf::Color::Green);
-
-        // cohenSutherland(window, p1, p2, min, max, sf::Color::Blue, true);
-
-        window.display();
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
-    }
+    bool isDragging = false; // Флаг, указывающий, идет ли в данный момент перетаскивание
 
     while (window.isOpen()) {
-
-        // Event handling
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+            switch (event.type) {
+            case sf::Event::Closed:
                 window.close();
+                break;
+            case sf::Event::MouseMoved:
+                sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+                min = mousePos - sf::Vector2f(30, 30);
+                max = mousePos + sf::Vector2f(30, 30);
+                drawFox(window, polygons);
+                break;
             }
         }
     }
