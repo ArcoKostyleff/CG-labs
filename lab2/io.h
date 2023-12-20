@@ -123,11 +123,38 @@ void replaceImageHueToColor(Image &image, const Color &firstColor, const Color &
         color.red = replaceColor.red;
         color.green = replaceColor.green;
         color.blue = replaceColor.blue;
-        
+
         i++;
     }
     std::cout << "Replaced " << i << " colors!";
 }
+
+void replaceImageHueToColorPixel(Image &image, const Color &firstColor, const Color &secondColor, const int &replaceColor) {
+    int i = -1;
+    std::vector<int> replaceColors;
+    for (auto& color : image.palette) {
+        i++;
+        if (!(firstColor.red <= color.red && secondColor.red >= color.red)) {
+            continue;
+        }
+        if (!(firstColor.green <= color.green && secondColor.green >= color.green)) {
+            continue;
+        }
+        if (!(firstColor.blue <= color.blue && secondColor.blue >= color.blue)) {
+            continue;
+        }
+        replaceColors.push_back(i);
+    }
+
+    for (auto& pixel : image.pixels) {
+        if (std::find(replaceColors.begin(), replaceColors.end(), pixel) != replaceColors.end()) {
+            pixel = replaceColor;        
+        }
+    }
+
+    std::cout << "Replaced " << i << " colors!";
+}
+
 
 // int main() {
 

@@ -118,8 +118,8 @@ int main1() {
     return 0;
 }
 
-
-int main() {
+/* Replace colors to color (palette) */
+int main2() {
     // createImage();
 
     std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
@@ -162,6 +162,63 @@ int main() {
 
     /* Replace color */
     replaceImageHueToColor(image, startColor, endColor, replaceColor);
+    displayImage(image);
+
+    return 0;
+}
+
+/* Replace colors to color (pixels) */
+int main() {
+    // createImage();
+
+    std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
+    std::cout << "Enter image path to view... ";
+    std::string imagePath;
+    std::cin >> imagePath;    
+
+    std::ifstream inputFile("../" + imagePath, std::ios::binary);
+    if (!inputFile.is_open()) {
+        std::cout << "Error opening\n";
+        return 1;
+    }
+    Image image = readImage(inputFile);
+    std::cout << image.header.width << "x" << image.header.height << std::endl;
+
+    /* Start color */
+    Color startColor;
+    std::cout << "Enter first shade color: ";
+    int red, green, blue;
+    std::cin >> red >> green >> blue;
+    startColor.red = red;
+    startColor.green = green;
+    startColor.blue = blue;
+
+    /* End color */
+    Color endColor;
+    std::cout << "Enter second shade color: ";
+    std::cin >> red >> green >> blue;
+    endColor.red = red;
+    endColor.green = green;
+    endColor.blue = blue;
+
+    /* Color to replace */
+    Color replaceColor;
+    // 0 - Черный
+    // 1 - Белый
+    // 4 - Красный
+    // 8 - Зеленый
+    // 12 - Синий
+    std::cout << "0 - белый" << std::endl;
+    std::cout << "3 - черный" << std::endl;
+    std::cout << "4 - красный" << std::endl;
+    std::cout << "8 - зеленый" << std::endl;
+    std::cout << "12 - синий" << std::endl; 
+    std::cout << "Enter color to replace: ";
+    int n;
+    std::cin >> n;
+
+    /* Replace color */
+    replaceImageHueToColorPixel(image, startColor, endColor, n);
     displayImage(image);
 
     return 0;
