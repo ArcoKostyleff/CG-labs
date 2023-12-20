@@ -75,7 +75,8 @@ void createImage() {
     writeImage(outputFile, img);
 }
 
-int main() {
+/* Replace gray shade */
+int main1() {
     // createImage();
 
     std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
@@ -112,6 +113,55 @@ int main() {
     replaceColor.blue = blue;
 
     replaceImageHueToColor(image, startColor, diff, replaceColor);
+    displayImage(image);
+
+    return 0;
+}
+
+
+int main() {
+    // createImage();
+
+    std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
+    std::cout << "Enter image path to view... ";
+    std::string imagePath;
+    std::cin >> imagePath;    
+
+    std::ifstream inputFile("../" + imagePath, std::ios::binary);
+    if (!inputFile.is_open()) {
+        std::cout << "Error opening\n";
+        return 1;
+    }
+    Image image = readImage(inputFile);
+    std::cout << image.header.width << "x" << image.header.height << std::endl;
+
+    /* Start color */
+    Color startColor;
+    std::cout << "Enter first shade color: ";
+    int red, green, blue;
+    std::cin >> red >> green >> blue;
+    startColor.red = red;
+    startColor.green = green;
+    startColor.blue = blue;
+
+    /* End color */
+    Color endColor;
+    std::cout << "Enter second shade color: ";
+    std::cin >> red >> green >> blue;
+    endColor.red = red;
+    endColor.green = green;
+    endColor.blue = blue;
+
+    /* Color to replace */
+    Color replaceColor;
+    std::cout << "Enter color to replace: ";
+    std::cin >> red >> green >> blue;
+    replaceColor.red = red;
+    replaceColor.green = green;
+    replaceColor.blue = blue;
+
+    /* Replace color */
+    replaceImageHueToColor(image, startColor, endColor, replaceColor);
     displayImage(image);
 
     return 0;

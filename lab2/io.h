@@ -107,6 +107,28 @@ void replaceImageHueToColor(Image &image, const Color &firstColor, const uint8_t
     std::cout << "Replaced " << i << " colors!";
 }
 
+void replaceImageHueToColor(Image &image, const Color &firstColor, const Color &secondColor, const Color &replaceColor) {
+    int i = 0;
+    for (auto& color : image.palette) {
+        if (!(firstColor.red <= color.red && secondColor.red >= color.red)) {
+            continue;
+        }
+        if (!(firstColor.green <= color.green && secondColor.green >= color.green)) {
+            continue;
+        }
+        if (!(firstColor.blue <= color.blue && secondColor.blue >= color.blue)) {
+            continue;
+        }
+
+        color.red = replaceColor.red;
+        color.green = replaceColor.green;
+        color.blue = replaceColor.blue;
+        
+        i++;
+    }
+    std::cout << "Replaced " << i << " colors!";
+}
+
 // int main() {
 
 //     // Чтение палитры из файла "palette.bin"
