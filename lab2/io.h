@@ -83,6 +83,30 @@ void writeImage(std::ofstream &file, const Image &image) {
     _writePixels(file, image.pixels);
 }
 
+void replaceImageHueToColor(Image &image, const Color &firstColor, const uint8_t &diff, const Color &replaceColor) {
+    int i = 0;
+    for (auto& color : image.palette) {
+        uint8_t redDiff = color.red - firstColor.red;
+        uint8_t greenDiff = color.green - firstColor.green;
+        uint8_t blueDiff = color.blue - firstColor.blue;
+        // Если разница меньше 0, значит цвет за пределами
+        if (redDiff < 0 || greenDiff < 0 || blueDiff < 0) {
+            continue;
+        }
+        // Если разницы равны, значит оттенок
+        if (!(redDiff == greenDiff && redDiff == blueDiff)) {
+            continue;
+        }
+        if (redDiff <= diff && greenDiff <= diff && blueDiff <= diff) {
+            color.red = replaceColor.red;
+            color.blue = replaceColor.blue;
+            color.green = replaceColor.green;
+            i++;
+        }
+    }
+    std::cout << "Replaced " << i << " colors!";
+}
+
 // int main() {
 
 //     // Чтение палитры из файла "palette.bin"

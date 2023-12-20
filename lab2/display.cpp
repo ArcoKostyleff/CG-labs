@@ -76,15 +76,14 @@ void createImage() {
 }
 
 int main() {
-
     // createImage();
 
     std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
     std::cout << "Enter image path to view... ";
     std::string imagePath;
-    std::cin >> imagePath;
+    std::cin >> imagePath;    
 
-    std::ifstream inputFile(imagePath, std::ios::binary);
+    std::ifstream inputFile("../" + imagePath, std::ios::binary);
     if (!inputFile.is_open()) {
         std::cout << "Error opening\n";
         return 1;
@@ -92,6 +91,17 @@ int main() {
     Image image = readImage(inputFile);
     std::cout << image.header.width << "x" << image.header.height << std::endl;
 
+    Color startColor;
+    std::cout << "Enter first shade color: ";
+    std::cin >> startColor.red >> startColor.green >> startColor.blue;
+    std::cout << "Enter diff: ";
+    uint16_t diff;
+    std::cin >> diff;
+    Color replaceColor;
+    std::cout << "Enter color to replace: ";
+    std::cin >> replaceColor.red >> replaceColor.green >> replaceColor.blue;
+
+    replaceImageHueToColor(image, startColor, diff, replaceColor);
     displayImage(image);
 
     return 0;
