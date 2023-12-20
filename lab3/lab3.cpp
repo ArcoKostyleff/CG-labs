@@ -50,43 +50,35 @@ std::vector<Polygon> readPolygonsFromFile(const std::string& filename, int scale
 
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab 3 - Variant 1");
+    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Lab 3 - А6");
     window.clear(sf::Color::Black);
-    auto polygons = readPolygonsFromFile("../pollygons.txt", SCALE, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    Polygon polygon;
+    polygon.points = {{1, 7}, {0, 10}, {-1, 11}, {-2, 10}, {0, 7}, {-2, 5}, {-7, 3}, {-8, 0}, {-9, 1}, {-9, 0}, {-7, -2}, {-2, -2}, {-3, -1}, {-4, -1}, {-1, 3}, {0, -2}, {1, -2}, {0, 0}, {0, 3}, {1, 4}, {2, 4}, {3, 5}, {2, 6}, {1, 9}, {0, 10}};
 
-    for (auto& polygon : polygons) {
+    for (auto& point : polygon.points)
+        point.x *= SCALE;
+    for (auto& point : polygon.points) {
+        point.y = 11 - point.y;
+        point.y *= SCALE;
+    }
+
+    for (auto& point : polygon.points)
+        point.x += 500;
+    for (auto& point : polygon.points)
+        point.y += 200;
+
+    for (auto &point : polygon.points) {
         std::cout << "Draw pollygon" << std::endl;
         std::cout << "Points count: " << polygon.points.size() << std::endl;
-        std::cout << "Color: " << (int)polygon.color.r << " " << (int)polygon.color.g << " " << (int)polygon.color.b << std::endl;
         for (auto& point : polygon.points)
             std::cout << '(' << point.x << "; " << point.y << ')' << std::endl;
         std::cout << std::endl;
-
-        drawPolygon(window, polygon.points, polygon.color);
-        auto point = getPointInsidePolygon(polygon.points);
-        floodFill(window, point.x, point.y, polygon.color, polygon.color);
-        window.display();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
-    // // Отрисовка координатной прямой посередине экрана
-    // // Создание вертикальной линии
-    // sf::Vertex verticalLine[] =
-    // {
-    //     sf::Vertex(sf::Vector2f(window.getSize().x / 2, 0), sf::Color::White),
-    //     sf::Vertex(sf::Vector2f(window.getSize().x / 2, window.getSize().y), sf::Color::White)
-    // };
-    // // Создание горизонтальной линии
-    // sf::Vertex horizontalLine[] =
-    // {
-    //     sf::Vertex(sf::Vector2f(0, window.getSize().y / 2), sf::Color::White),
-    //     sf::Vertex(sf::Vector2f(window.getSize().x, window.getSize().y / 2), sf::Color::White)
-    // };
-
-    // window.draw(verticalLine, 2, sf::Lines);
-    // window.draw(horizontalLine, 2, sf::Lines);
-
+    drawPolygon(window, polygon.points, sf::Color::White);
     window.display();
+    modifiedStackFloodFillLinearGradient(window, 300, 570, 300, sf::Color::Red, sf::Color::Blue);
+    std::cout << "DONE!!!" << std::endl;
 
     while (window.isOpen()) {
         sf::Event event;

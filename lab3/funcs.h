@@ -1,6 +1,9 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <stack>
+#include <iostream>
+#include <chrono>
+#include <thread>
 
 sf::Vector2f getPointInsidePolygon(const std::vector<sf::Vector2f>& vertices) {
     sf::Vector2f center(0.f, 0.f);
@@ -104,8 +107,8 @@ void _floodFillImage(sf::Image &image, int x, int y, sf::Color outlineColor, sf:
     if (x >= image.getSize().x || y >= image.getSize().y) return;
     // Проверяем пиксель на цвет
     sf::Color color = image.getPixel(x, y);
-    if (color == outlineColor) return;  // Граничный цвет
-    if (color == newColor) return;      // Цвет заливки
+    if (color == outlineColor) return;          // Граничный цвет
+    if (color == newColor) return;              // Цвет заливки
     // Устанавливаем цвет пискелю
     image.setPixel(x, y, newColor);
     // Рекурсивно заполняем соседние пиксели
@@ -168,3 +171,65 @@ void modifiedStackFloodFill(sf::RenderWindow &window, int x, int y, sf::Color ou
     sf::Sprite sprite(texture);
     window.draw(sprite);
 }
+
+void modifiedStackFloodFillLinearGradient(sf::RenderWindow &window, int x, int y, int steps, sf::Color firstColor, sf::Color secondColor) {
+    // Конвертируем в image
+    sf::Texture texture;
+    texture.create(window.getSize().x, window.getSize().y);
+    texture.update(window);
+    sf::Image image = texture.copyToImage();
+    // Начальная и конечная точки
+    int startX = x;
+    // Определяем шаг
+    float colorStepR = (secondColor.r - firstColor.r) / (float)steps;
+    float colorStepG = (secondColor.g - firstColor.g) / (float)steps;
+    float colorStepB = (secondColor.b - firstColor.b) / (float)steps;
+    // Созадем стек и помещаем в него первую точку
+    std::stack<std::pair<int, int>> s;
+    s.push({x, y});
+    sf::Color colorToReplace = image.getPixel(x, y);
+    std::cout << "colorToReplace: " << (int)colorToReplace.r << " " << (int)colorToReplace.g << " " << (int)colorToReplace.b << std::endl;
+    int i = 0;
+    // Заливаем фигуру цветом
+    while(!s.empty()) {
+        // Извлекаем точку
+        int x = s.top().first;
+        int y = s.top().second;
+        s.pop();
+        // Проверяем выход за границы
+        if (x < 0 || y < 0) continue;
+        if (x >= image.getSize().x || y >= image.getSize().y) continue;
+        if (image.getPixel(x, y) != colorToReplace) continue;
+        // Вычисляем очередной цвет
+        float colorR = firstColor.r + colorStepR * (x - startX);
+        if (colorR > 255) colorR = 255; if (colorR < 0) colorR = 0;
+        float colorG = firstColor.g + colorStepG * (x - startX);
+        if (colorG > 255) colorG = 255; if (colorG < 0) colorG = 0;
+        float colorB = firstColor.b + colorStepB * (x - startX);
+        if (colorB > 255) colorB = 255; if (colorB < 0) colorB = 0;
+        sf::Color color = sf::Color(colorR, colorG, colorB);
+        // Устанавливаем цвет пискелю
+        image.setPixel(x, y, color);
+        // Добавляем в стек соседние точки
+        s.push({x+1, y});
+        s.push({x-1, y});
+        s.push({x, y+1});
+        s.push({x, y-1});
+        // Отображаем промежуточный результат
+        if (i++ % 50 == 0) {
+            window.clear();
+            texture.loadFromImage(image);
+            sf::Sprite sprite(texture);
+            window.draw(sprite);
+            window.display();
+        }
+    }
+    // Отображаем залитое изображение
+    window.clear();
+    texture.loadFromImage(image);
+    sf::Sprite sprite(texture);
+    window.draw(sprite);
+    window.display();
+}
+
+
