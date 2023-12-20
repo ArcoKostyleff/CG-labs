@@ -93,13 +93,23 @@ int main() {
 
     Color startColor;
     std::cout << "Enter first shade color: ";
-    std::cin >> startColor.red >> startColor.green >> startColor.blue;
+    int red, green, blue;
+    std::cin >> red >> green >> blue;
+    startColor.red = red;
+    startColor.green = green;
+    startColor.blue = blue;
     std::cout << "Enter diff: ";
     uint16_t diff;
     std::cin >> diff;
     Color replaceColor;
+    std::cout << "Color shade: " << red << " " << green  << " " << blue <<
+        " -- "  << red + diff << " " << green + diff  << " " << blue + diff << std::endl;
+    
     std::cout << "Enter color to replace: ";
-    std::cin >> replaceColor.red >> replaceColor.green >> replaceColor.blue;
+    std::cin >> red >> green >> blue;
+    replaceColor.red = red;
+    replaceColor.green = green;
+    replaceColor.blue = blue;
 
     replaceImageHueToColor(image, startColor, diff, replaceColor);
     displayImage(image);
