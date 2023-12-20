@@ -75,9 +75,30 @@ void createImage() {
     writeImage(outputFile, img);
 }
 
+// Create image with pallete 5x5
+void createImage2() {
+    Image img;
+    img.header.bitsPerPixel = 5;
+    img.header.width = 5;
+    img.header.height = 5;
+    img.header.paletteSize = 25;
+    img.pixels = {0x0, 0x1, 0x2, 0x3, 0x4, 
+                  0x5, 0x6, 0x7, 0x8, 0x9, 
+                  0xA, 0xB, 0xC, 0xD, 0xE, 
+                  0xF, 0x10, 0x11, 0x12, 0x13,
+                  0x14, 0x15, 0x16, 0x17, 0x18};
+
+    std::ifstream paletteFile("../pallete/pallete5x5.bin");
+
+    img.palette = _readPalette(paletteFile, 25);
+    std::ofstream outputFile("../123.bin", std::ios::binary);
+    writeImage(outputFile, img);
+}
+
 int main() {
 
     // createImage();
+    // createImage2();
 
     std::cout << "Cwd: " << std::filesystem::current_path() << std::endl;
     std::cout << "Enter image path to view... ";
