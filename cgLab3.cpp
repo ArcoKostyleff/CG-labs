@@ -1,4 +1,4 @@
-﻿#include <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -395,12 +395,12 @@ int main() {
 
 	//wnd.circleBres(100,100,50);
 	
-	wnd.testTime(20,  200, 0.1, { 100,100 });
-	wnd.testTime(50,  500, 0.1, { 100,200 });
-	wnd.testTime(50,  700, 0.1, { 200,100 });
-	wnd.testTime(50,  700, 0.1, { 200,200 });
-	wnd.testTime(50,  1500, 0.1, { 400,200 });
-	wnd.testTime(100,  10000, 0.1, { 500,300 });
+	wnd.testTime(20,  200, 0.05, { 100,100 });
+	wnd.testTime(50,  500, 0.05, { 100,200 });
+	wnd.testTime(50,  700, 0.05, { 200,100 });
+	wnd.testTime(50,  700, 0.05, { 200,200 });
+	wnd.testTime(50,  1500, 0.05, { 400,200 });
+	wnd.testTime(100,  10000, 0.05, { 500,300 });
 
     //for (auto& mPolygon : wnd.polygons) {
     //    std::cout << "Draw pollygon" << std::endl;
