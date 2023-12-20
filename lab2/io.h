@@ -8,6 +8,7 @@
 
 #include "structs.h"
 
+
 // Функция для чтения заголовка из файла
 FileHeader _readHeader(std::ifstream &file) {
     FileHeader header;
@@ -81,6 +82,45 @@ void writeImage(std::ofstream &file, const Image &image) {
     _writeHeader(file, image.header);
     _writePalette(file, image.palette);
     _writePixels(file, image.pixels);
+}
+
+Image mirrorImageVertical(std::string imagePath, std::string outputPath) {
+    std::ifstream inputFile(imagePath, std::ios::binary);
+
+    Image image = readImage(inputFile);
+
+    Image mirroredImage{
+        FileHeader{image.header.width, image.header.height, image.header.bitsPerPixel,
+                   image.header.paletteSize},
+        image.palette,
+        std::vector<Pixel>(image.header.width * image.header.height)};
+    for (int y = 0; y < image.header.height; y++) {
+        for (int x = 0; x < image.header.width; x++) {
+            int mirroredY = image.header.height - y - 1;
+            mirroredImage.pixels[y * image.header.width + x] =
+                image.pixels[mirroredY * image.header.width + x];
+        }
+    }
+
+    std::ofstream outputFile(outputPath, std::ios::binary);
+    writeImage(outputFile, mirroredImage);
+    return mirroredImage;
+}
+
+Image mirrorImageX(const Image &image) {
+    Image mirroredImage{
+        FileHeader{image.header.width, image.header.height, image.header.bitsPerPixel,
+                   image.header.paletteSize},
+        image.palette,
+        std::vector<Pixel>(image.header.width * image.header.height)};
+    for (int y = 0; y < image.header.height; y++) {
+        for (int x = 0; x < image.header.width; x++) {
+            int mirroredX = image.header.width - x - 1;
+            mirroredImage.pixels[y * image.header.width + x] =
+                image.pixels[y * image.header.width + mirroredX];
+        }
+    }
+    return mirroredImage;
 }
 
 // int main() {

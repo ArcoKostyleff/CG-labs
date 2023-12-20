@@ -84,6 +84,9 @@ int main() {
     std::string imagePath;
     std::cin >> imagePath;
 
+    // mirrorImageVertical(imagePath, "../mirrored.bin");
+    // return 0;
+
     std::ifstream inputFile(imagePath, std::ios::binary);
     if (!inputFile.is_open()) {
         std::cout << "Error opening\n";
